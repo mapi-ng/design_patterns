@@ -42,10 +42,32 @@ class Issue {
   Priority priority_;
 };
 
+// Forward declaration
+template <typename T>
+class AndSpecification;
+
 template <typename T>
 class Specification {
  public:
   virtual bool is_satisfied(T& item) = 0;
+
+  AndSpecification<T> operator&&(Specification<T>& other) {
+    return AndSpecification<T>(*this, other);
+  }
+};
+
+template <typename T>
+class AndSpecification : public Specification<T> {
+ private:
+  Specification<T>& first_;
+  Specification<T>& second_;
+
+ public:
+  explicit AndSpecification(Specification<T>& first, Specification<T>& second) : first_(first), second_(second) {}
+
+  bool is_satisfied(T& item) override {
+    return first_.is_satisfied(item) && second_.is_satisfied(item);
+  }
 };
 
 class AssigneeSpecification : public Specification<Issue> {
@@ -77,10 +99,22 @@ class PrioritySpecification : public Specification<Issue> {
   Issue::Priority priority_;
 
  public:
-  PrioritySpecification(Issue::Priority priority) : priority_(priority) {}
+  explicit PrioritySpecification(Issue::Priority priority) : priority_(priority) {}
 
   bool is_satisfied(Issue& issue) override {
     return issue.getPriority() == priority_;
+  }
+};
+
+class PriorityNotSpecification : public Specification<Issue> {
+ private:
+  Issue::Priority priority_;
+
+ public:
+  PriorityNotSpecification(Issue::Priority priority) : priority_(priority) {}
+
+  bool is_satisfied(Issue& issue) override {
+    return issue.getPriority() != priority_;
   }
 };
 
@@ -108,17 +142,21 @@ class IssueFilter : public Filter<Issue> {
 
 int main(int argc, char* argv[]) {
   std::vector<Issue> issues = {
-      {"ISS1", "Marcin", "Tomasz", Issue::Type::Bug, Issue::Priority::Medium},
+      {"ISS1", "Marcin", "Tomasz", Issue::Type::Bug, Issue::Priority::Low},
       {"ISS2", "Marcin", "Mariusz", Issue::Type::Story,
        Issue::Priority::Medium},
       {"ISS3", "Robert", "Mariusz", Issue::Type::Task, Issue::Priority::High},
       {"ISS4", "Mariusz", "Jonasz", Issue::Type::Task, Issue::Priority::High},
+      {"ISS5", "Marcin", "Jonasz", Issue::Type::Task, Issue::Priority::High},
+      {"ISS5", "Marcin", "Jonasz", Issue::Type::Task, Issue::Priority::Low},
   };
 
   IssueFilter filter;
   AssigneeSpecification spec_by_assignee("Mariusz");
   ReporterSpecification spec_by_reporter("Marcin");
   PrioritySpecification spec_by_priority(Issue::Priority::High);
+  PriorityNotSpecification spec_by_priority_not(Issue::Priority::Medium);
+  AndSpecification<Issue> spec_priority_and_reporter(spec_by_reporter, spec_by_priority);
 
   auto filtered_by_assignee = filter.filter(issues, spec_by_assignee);
 
@@ -141,6 +179,33 @@ int main(int argc, char* argv[]) {
     std::cout << issue.getKey() << std::endl;
   }
 
+  auto filtered_by_priority_not = filter.filter(issues, spec_by_priority_not);
+
+  std::cout << "Issues with priority NOT Medium: \n";
+  for (auto& issue : filtered_by_priority_not) {
+    std::cout << issue.getKey() << std::endl;
+  }
+
+  auto filtered_by_priority_and_reporter = filter.filter(issues, spec_priority_and_reporter);
+
+  std::cout << "Issues with priority High and reporter Marcin: \n";
+  for (auto& issue : filtered_by_priority_and_reporter) {
+    std::cout << issue.getKey() << std::endl;
+  }
+
+  /* Leads to segmentation fault (references to non-existing objects within AndSpecification)
+  auto spec = AssigneeSpecification("Jonasz") && PrioritySpecification(Issue::Priority::High);
+  */
+
+  Specification<Issue> *assignee_spec = new AssigneeSpecification("Jonasz");
+  Specification<Issue> *prio_spec = new PrioritySpecification(Issue::Priority::High);
+  auto spec = *assignee_spec && *prio_spec;
+  auto filtered_by_priority_and_reporter_operator = filter.filter(issues, spec);
+
+  std::cout << "Issues with priority High and assignee Jonasz: \n";
+  for (auto& issue : filtered_by_priority_and_reporter_operator) {
+    std::cout << issue.getKey() << std::endl;
+  }
 
   return 0;
 }
