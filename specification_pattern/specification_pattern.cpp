@@ -1,16 +1,24 @@
+/**
+ * @author Marcin Pilch
+ */
 #include <iostream>
 #include <vector>
 
 class Issue {
  public:
-  enum class Type { Story,
-                    Task,
-                    Bug };
-  enum class Priority { Highest,
-                        High,
-                        Medium,
-                        Low,
-                        Lowest };
+  enum class Type {
+    Story,
+    Task,
+    Bug
+  };
+
+  enum class Priority {
+    Highest,
+    High,
+    Medium,
+    Low,
+    Lowest
+  };
 
   Issue(std::string key, std::string reporter, std::string assignee,
         Type type, Priority priority)
@@ -45,7 +53,7 @@ class AssigneeSpecification : public Specification<Issue> {
   std::string assignee_;
 
  public:
-  AssigneeSpecification(std::string assignee) : assignee_(assignee) {}
+  explicit AssigneeSpecification(std::string assignee) : assignee_(assignee) {}
 
   bool is_satisfied(Issue& issue) override {
     return issue.getAssignee() == assignee_;
@@ -57,7 +65,7 @@ class ReporterSpecification : public Specification<Issue> {
   std::string reporter_;
 
  public:
-  ReporterSpecification(std::string reporter) : reporter_(reporter) {}
+  explicit ReporterSpecification(std::string reporter) : reporter_(reporter) {}
 
   bool is_satisfied(Issue& issue) override {
     return issue.getReporter() == reporter_;
