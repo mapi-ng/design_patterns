@@ -3,6 +3,7 @@
  */
 #include <iostream>
 #include <vector>
+#include <memory>
 
 class Issue {
  public:
@@ -197,8 +198,8 @@ int main(int argc, char* argv[]) {
   auto spec = AssigneeSpecification("Jonasz") && PrioritySpecification(Issue::Priority::High);
   */
 
-  Specification<Issue> *assignee_spec = new AssigneeSpecification("Jonasz");
-  Specification<Issue> *prio_spec = new PrioritySpecification(Issue::Priority::High);
+  std::shared_ptr<Specification<Issue>> assignee_spec = std::make_shared<AssigneeSpecification>("Jonasz");
+  std::shared_ptr<Specification<Issue>> prio_spec = std::make_shared<PrioritySpecification>(Issue::Priority::High);
   auto spec = *assignee_spec && *prio_spec;
   auto filtered_by_priority_and_reporter_operator = filter.filter(issues, spec);
 
