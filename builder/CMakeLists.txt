@@ -1,4 +1,4 @@
-project(builder)
+set(MODULE builder)
 
 add_library(${PROJECT_NAME})
 
