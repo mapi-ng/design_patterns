@@ -14,5 +14,7 @@ TEST_F(BuilderFixture, TestAddChild) {
   builder.AddChild("li", "hello");
   builder.AddChild("li", "world");
 
+  builder.AddChild("p", "paragraph1").AddChild("p", "paragraph2");
+
   std::cout << builder.str() << std::endl;
 }
