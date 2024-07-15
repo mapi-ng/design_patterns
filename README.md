@@ -8,8 +8,8 @@ Implementations of various design patterns
 
 ## Prerequisites
 - Internet connection (for CMake FetchContent module)
-- CMake version at least 3.26.2
-- Compiler with support for C++20
+- CMake version at least 3.28.3
+- Compiler with support for C++23
 
 ## Build instructions
 From command line, execute the commands below (replace Debug by Release if relevant):
