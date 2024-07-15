@@ -25,7 +25,7 @@ std::string YamlElement::str(int indent) const {
     oss << " " << m_value << std::endl;
   }
 
-  if (m_elements.size() > 0) {
+  if (!m_elements.empty()) {
     oss << std::endl;
     for (const auto& e : m_elements) {
       oss << e.str(indent + 1);
