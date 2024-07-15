@@ -9,6 +9,7 @@ class YamlBuilder {
   explicit YamlBuilder(std::string_view root_name);
   YamlBuilder& AddChild(std::string_view child_name,
                         std::string_view child_value);
+  YamlBuilder& AddChild(YamlElement& child_value);
 
   operator YamlElement() const { return m_root; }
   YamlElement build();

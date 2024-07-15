@@ -22,4 +22,8 @@ TEST(YamlBuilderTest, VisualTest) {
 
   // Create a builder by implicit conversion of builder into element
   YamlElement yaml_element2 = fluent_builder;
+
+  // Try to add nested element
+  fluent_builder.AddChild(yaml_element2);
+  std::cout << fluent_builder.str() << std::endl;
 }

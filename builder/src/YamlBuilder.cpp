@@ -14,4 +14,9 @@ YamlBuilder& YamlBuilder::AddChild(std::string_view child_name,
   return *this;
 }
 
+YamlBuilder& YamlBuilder::AddChild(YamlElement& child_value) {
+  m_root.addElement(child_value);
+  return *this;
+}
+
 std::string YamlBuilder::str() const { return m_root.str(); }
