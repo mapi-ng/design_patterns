@@ -18,3 +18,4 @@ include(cmake/fetch_dependencies.cmake)
 include(CTest)
 
 add_subdirectory(specification_pattern)
+add_subdirectory(builder)
