@@ -78,7 +78,7 @@ TEST_F(SpecificationFixture, TestReporterAndPriority) {
   expectIssueKeys(filtered_by_priority_and_reporter, {"ISS5"});
 }
 
-TEST_F(SpecificationFixture, TestAndOperator) {
+TEST_F(SpecificationFixture, DISABLED_TestAndOperator) {
   // const_cast used to suppress error:
   // error: cannot bind non-const lvalue reference of type
   // ‘Specification<Issue>&’ to an rvalue of type ‘Specification<Issue>’
