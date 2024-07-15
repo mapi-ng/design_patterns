@@ -7,6 +7,16 @@
 #include "PrioritySpecification.h"
 #include "ReporterSpecification.h"
 
+void expectIssueKeys(const std::vector<Issue> issues,
+                     const std::vector<std::string_view>& expected_keys) {
+  for (auto& issue : issues) {
+    auto it = std::find_if(
+        expected_keys.begin(), expected_keys.end(),
+        [&issue](std::string_view a) { return a == issue.getKey(); });
+    EXPECT_TRUE(it != expected_keys.end());
+  }
+}
+
 class SpecificationFixture : public testing::Test {
  protected:
   IssueFilter m_filter;
@@ -17,7 +27,7 @@ class SpecificationFixture : public testing::Test {
       {"ISS3", "Robert", "Mariusz", Issue::Type::Task, Issue::Priority::High},
       {"ISS4", "Mariusz", "Jonasz", Issue::Type::Task, Issue::Priority::High},
       {"ISS5", "Marcin", "Jonasz", Issue::Type::Task, Issue::Priority::High},
-      {"ISS5", "Marcin", "Jonasz", Issue::Type::Task, Issue::Priority::Low},
+      {"ISS6", "Marcin", "Jonasz", Issue::Type::Task, Issue::Priority::Low},
   };
 
  public:
@@ -28,21 +38,15 @@ TEST_F(SpecificationFixture, TestAssignee) {
 
   auto filtered_by_assignee = m_filter.filter(issues, spec_by_assignee);
 
-  std::cout << "Issues with assignee Mariusz: \n";
-  for (auto& issue : filtered_by_assignee) {
-    std::cout << issue.getKey() << std::endl;
-  }
+  expectIssueKeys(filtered_by_assignee, {"ISS2", "ISS3"});
 }
 
 TEST_F(SpecificationFixture, TestReporter) {
   ReporterSpecification spec_by_reporter("Marcin");
 
-  auto filtered_by_assignee = m_filter.filter(issues, spec_by_reporter);
+  auto filtered_by_reporter = m_filter.filter(issues, spec_by_reporter);
 
-  std::cout << "Issues with assignee Mariusz: \n";
-  for (auto& issue : filtered_by_assignee) {
-    std::cout << issue.getKey() << std::endl;
-  }
+  expectIssueKeys(filtered_by_reporter, {"ISS1", "ISS2", "ISS5", "ISS6"});
 }
 
 TEST_F(SpecificationFixture, TestPriority) {
@@ -50,10 +54,7 @@ TEST_F(SpecificationFixture, TestPriority) {
 
   auto filtered_by_priority = m_filter.filter(issues, spec_by_priority);
 
-  std::cout << "Issues with priority High: \n";
-  for (auto& issue : filtered_by_priority) {
-    std::cout << issue.getKey() << std::endl;
-  }
+  expectIssueKeys(filtered_by_priority, {"ISS3", "ISS4", "ISS5"});
 }
 
 TEST_F(SpecificationFixture, TestPriorityNot) {
@@ -61,10 +62,8 @@ TEST_F(SpecificationFixture, TestPriorityNot) {
 
   auto filtered_by_priority_not = m_filter.filter(issues, spec_by_priority_not);
 
-  std::cout << "Issues with priority NOT Medium: \n";
-  for (auto& issue : filtered_by_priority_not) {
-    std::cout << issue.getKey() << std::endl;
-  }
+  expectIssueKeys(filtered_by_priority_not,
+                  {"ISS1", "ISS3", "ISS4", "ISS5", "ISS6"});
 }
 
 TEST_F(SpecificationFixture, TestReporterAndPriority) {
@@ -76,29 +75,29 @@ TEST_F(SpecificationFixture, TestReporterAndPriority) {
   auto filtered_by_priority_and_reporter =
       m_filter.filter(issues, spec_priority_and_reporter);
 
-  std::cout << "Issues with priority High and reporter Marcin: \n";
-  for (auto& issue : filtered_by_priority_and_reporter) {
-    std::cout << issue.getKey() << std::endl;
-  }
+  expectIssueKeys(filtered_by_priority_and_reporter, {"ISS5"});
 }
 
-TEST_F(SpecificationFixture, TestOk) {
-  /* Leads to segmentation fault - references to non-existing objects within
-  AndSpecification
+TEST_F(SpecificationFixture, TestAndOperator) {
+  // const_cast used to suppress error:
+  // error: cannot bind non-const lvalue reference of type
+  // ‘Specification<Issue>&’ to an rvalue of type ‘Specification<Issue>’
+  PrioritySpecification priority_spec(Issue::Priority::High);
   auto spec = AssigneeSpecification("Jonasz") &&
-  PrioritySpecification(Issue::Priority::High);
-  */
+              const_cast<PrioritySpecification&>(priority_spec);
 
+  auto filtered_by_assignee_and_priority = m_filter.filter(issues, spec);
+
+  expectIssueKeys(filtered_by_assignee_and_priority, {"ISS4", "ISS5"});
+}
+
+TEST_F(SpecificationFixture, TestSharedPtr) {
   std::shared_ptr<Specification<Issue>> assignee_spec =
       std::make_shared<AssigneeSpecification>("Jonasz");
   std::shared_ptr<Specification<Issue>> prio_spec =
       std::make_shared<PrioritySpecification>(Issue::Priority::High);
   auto spec = *assignee_spec && *prio_spec;
-  auto filtered_by_priority_and_reporter_operator =
-      m_filter.filter(issues, spec);
+  auto filtered_by_assignee_and_priority = m_filter.filter(issues, spec);
 
-  std::cout << "Issues with priority High and assignee Jonasz: \n";
-  for (auto& issue : filtered_by_priority_and_reporter_operator) {
-    std::cout << issue.getKey() << std::endl;
-  }
+  expectIssueKeys(filtered_by_assignee_and_priority, {"ISS4", "ISS5"});
 }
