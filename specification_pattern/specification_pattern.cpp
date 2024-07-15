@@ -2,26 +2,15 @@
  * @author Marcin Pilch
  */
 #include <iostream>
-#include <vector>
 #include <memory>
+#include <vector>
 
 class Issue {
  public:
-  enum class Type {
-    Story,
-    Task,
-    Bug
-  };
+  enum class Type { Story, Task, Bug };
+  enum class Priority { Highest, High, Medium, Low, Lowest };
 
-  enum class Priority {
-    Highest,
-    High,
-    Medium,
-    Low,
-    Lowest
-  };
-
-  Issue(std::string key, std::string reporter, std::string assignee,
+  Issue(std::string key, std::string_view reporter, std::string_view assignee,
         Type type, Priority priority)
       : key_(key),
         reporter_(reporter),
@@ -64,7 +53,8 @@ class AndSpecification : public Specification<T> {
   Specification<T>& second_;
 
  public:
-  explicit AndSpecification(Specification<T>& first, Specification<T>& second) : first_(first), second_(second) {}
+  explicit AndSpecification(Specification<T>& first, Specification<T>& second)
+      : first_(first), second_(second) {}
 
   bool is_satisfied(T& item) override {
     return first_.is_satisfied(item) && second_.is_satisfied(item);
@@ -100,7 +90,8 @@ class PrioritySpecification : public Specification<Issue> {
   Issue::Priority priority_;
 
  public:
-  explicit PrioritySpecification(Issue::Priority priority) : priority_(priority) {}
+  explicit PrioritySpecification(Issue::Priority priority)
+      : priority_(priority) {}
 
   bool is_satisfied(Issue& issue) override {
     return issue.getPriority() == priority_;
@@ -133,8 +124,9 @@ class IssueFilter : public Filter<Issue> {
     std::vector<Issue> filtered_issues;
 
     for (auto& issue : issues) {
-      if (specification.is_satisfied(issue))
+      if (specification.is_satisfied(issue)) {
         filtered_issues.push_back(issue);
+      }
     }
 
     return filtered_issues;
@@ -157,7 +149,8 @@ int main(int argc, char* argv[]) {
   ReporterSpecification spec_by_reporter("Marcin");
   PrioritySpecification spec_by_priority(Issue::Priority::High);
   PriorityNotSpecification spec_by_priority_not(Issue::Priority::Medium);
-  AndSpecification<Issue> spec_priority_and_reporter(spec_by_reporter, spec_by_priority);
+  AndSpecification<Issue> spec_priority_and_reporter(spec_by_reporter,
+                                                     spec_by_priority);
 
   auto filtered_by_assignee = filter.filter(issues, spec_by_assignee);
 
@@ -187,19 +180,24 @@ int main(int argc, char* argv[]) {
     std::cout << issue.getKey() << std::endl;
   }
 
-  auto filtered_by_priority_and_reporter = filter.filter(issues, spec_priority_and_reporter);
+  auto filtered_by_priority_and_reporter =
+      filter.filter(issues, spec_priority_and_reporter);
 
   std::cout << "Issues with priority High and reporter Marcin: \n";
   for (auto& issue : filtered_by_priority_and_reporter) {
     std::cout << issue.getKey() << std::endl;
   }
 
-  /* Leads to segmentation fault (references to non-existing objects within AndSpecification)
-  auto spec = AssigneeSpecification("Jonasz") && PrioritySpecification(Issue::Priority::High);
+  /* Leads to segmentation fault - references to non-existing objects within
+  AndSpecification
+  auto spec = AssigneeSpecification("Jonasz") &&
+  PrioritySpecification(Issue::Priority::High);
   */
 
-  std::shared_ptr<Specification<Issue>> assignee_spec = std::make_shared<AssigneeSpecification>("Jonasz");
-  std::shared_ptr<Specification<Issue>> prio_spec = std::make_shared<PrioritySpecification>(Issue::Priority::High);
+  std::shared_ptr<Specification<Issue>> assignee_spec =
+      std::make_shared<AssigneeSpecification>("Jonasz");
+  std::shared_ptr<Specification<Issue>> prio_spec =
+      std::make_shared<PrioritySpecification>(Issue::Priority::High);
   auto spec = *assignee_spec && *prio_spec;
   auto filtered_by_priority_and_reporter_operator = filter.filter(issues, spec);
 
