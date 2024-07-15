@@ -14,7 +14,10 @@ TEST_F(BuilderFixture, TestAddChild) {
   builder.AddChild("li", "hello");
   builder.AddChild("li", "world");
 
-  builder.AddChild("p", "paragraph1").AddChild("p", "paragraph2");
+  auto fluent_builder = HtmlElement::build("div")
+                            .AddChild("p", "paragraph1")
+                            .AddChild("p", "paragraph2");
 
   std::cout << builder.str() << std::endl;
+  std::cout << fluent_builder.str() << std::endl;
 }
