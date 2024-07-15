@@ -5,7 +5,7 @@ YamlBuilder::YamlBuilder(std::string_view root_name) {
   m_root.setRoot(true);
 }
 
-YamlElement YamlBuilder::build() { return m_root; }
+YamlElement YamlBuilder::build() const { return m_root; }
 
 YamlBuilder& YamlBuilder::AddChild(std::string_view child_name,
                                    std::string_view child_value) {

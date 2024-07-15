@@ -11,6 +11,6 @@ class YamlBuilder {
                         std::string_view child_value);
   YamlBuilder& AddChild(const YamlElement& child_value);
 
-  YamlElement build();
+  YamlElement build() const;
   std::string str() const;
 };
